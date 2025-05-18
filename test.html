@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animación de Carta con Cursor</title>
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #333;
+    margin: 0;
+    font-family: sans-serif;
+  }
+
+  /* Contenedor para la perspectiva */
+  .card-container {
+    perspective: 1000px; /* Define qué tan pronunciado será el efecto 3D */
+  }
+
+  .card {
+    width: 300px;
+    height: 450px;
+    background: linear-gradient(135deg, #ff6b6b, #feca57);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: 30px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    /* La transición hace que el movimiento sea suave */
+    transition: transform 0.1s ease-out;
+    transform-style: preserve-3d; /* Necesario para anidar elementos 3D si los tuvieras */
+    position: relative; /* Para el brillo */
+    overflow: hidden; /* Para que el brillo no se salga */
+  }
+
+  .card h2 {
+    margin-top: 0;
+    font-size: 2em;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+  }
+
+  .card p {
+    font-size: 1em;
+    line-height: 1.6;
+  }
+
+  .card-content {
+     transform: translateZ(20px); /* Mueve el contenido un poco hacia adelante para profundidad */
+  }
+
+  /* Opcional: Efecto de brillo que sigue al mouse */
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 60%);
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none; /* Para que no interfiera con los eventos del mouse en la card */
+  }
+
+  .card:hover::before {
+    opacity: 1;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="card-container">
+  <div class="card" id="interactiveCard">
+    <div class="card-content">
+      <h2>Tarjeta Interactiva</h2>
+      <p>Esta tarjeta se inclina y gira suavemente en la dirección donde mueves el cursor del mouse.</p>
+      <p>¡Pruébalo!</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const card = document.getElementById('interactiveCard');
+  const cardContainer = document.querySelector('.card-container'); // Usamos el contenedor para algunos cálculos
+
+  // Qué tanto queremos que rote la tarjeta
+  const MAX_ROTATION = 15; // Grados
+
+  card.addEventListener('mousemove', (event) => {
+    const rect = card.getBoundingClientRect(); // Dimensiones y posición de la tarjeta
+
+    // Posición del mouse relativa al CENTRO de la tarjeta
+    // event.clientX/Y es la posición del mouse en la ventana
+    // rect.left/top es la posición de la tarjeta en la ventana
+    // rect.width/height es el tamaño de la tarjeta
+    const mouseX = event.clientX - rect.left - rect.width / 2;
+    const mouseY = event.clientY - rect.top - rect.height / 2;
+
+    // Calcular rotación. Dividimos por la mitad del ancho/alto para normalizar el valor entre -1 y 1 (aprox)
+    // Multiplicamos por MAX_ROTATION para escalar la rotación.
+    // La rotación en X se basa en mouseY y viceversa. El signo negativo en rotateX
+    // es para que la tarjeta se incline hacia "atrás" cuando el mouse va hacia arriba.
+    const rotateY = (mouseX / (rect.width / 2)) * MAX_ROTATION;
+    const rotateX = -(mouseY / (rect.height / 2)) * MAX_ROTATION;
+
+    // Aplicar la transformación CSS
+    card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`; // El translateZ da un leve efecto "pop"
+
+    // Actualizar posición del brillo (opcional)
+    const relativeMouseX = event.clientX - rect.left;
+    const relativeMouseY = event.clientY - rect.top;
+    card.style.setProperty('--mouse-x', `${relativeMouseX}px`);
+    card.style.setProperty('--mouse-y', `${relativeMouseY}px`);
+  });
+
+  card.addEventListener('mouseleave', () => {
+    // Resetear la transformación cuando el mouse sale
+    card.style.transform = 'rotateX(0deg) rotateY(0deg) translateZ(0px)';
+  });
+
+</script>
+
+</body>
+</html>
